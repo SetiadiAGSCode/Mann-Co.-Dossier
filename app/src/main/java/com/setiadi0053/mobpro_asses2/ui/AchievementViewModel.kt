@@ -4,20 +4,28 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.setiadi0053.mobpro_asses2.data.AppDatabase
+import com.setiadi0053.mobpro_asses2.data.PreferenceManager
 import com.setiadi0053.mobpro_asses2.data.entity.Achievement
 import com.setiadi0053.mobpro_asses2.data.entity.Tf2Class
 import com.setiadi0053.mobpro_asses2.data.repository.AchievementRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class AchievementViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: AchievementRepository
+    private val preferenceManager = PreferenceManager(application)
+
     val allClasses: StateFlow<List<Tf2Class>>
     val allAchievements: StateFlow<List<Achievement>>
     val deletedAchievements: StateFlow<List<Achievement>>
+    
+    val teamTheme: StateFlow<String> = preferenceManager.teamTheme.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), "RED"
+    )
+    
+    val sortByDate: StateFlow<Boolean> = preferenceManager.sortByDate.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), true
+    )
 
     init {
         val dao = AppDatabase.getDatabase(application).achievementDao()
@@ -38,6 +46,7 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
 
     private fun seedClasses() {
         viewModelScope.launch {
+            // Using a flow check or similar would be better, but for this assessment:
             val classes = listOf(
                 Tf2Class(1, "Scout", "#BD3B3B"),
                 Tf2Class(2, "Soldier", "#BD3B3B"),
@@ -54,7 +63,9 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun getAchievementsByClass(classId: Int): Flow<List<Achievement>> {
-        return repository.getAchievementsByClass(classId)
+        return repository.getAchievementsByClass(classId).combine(sortByDate) { list, sort ->
+            if (sort) list.sortedByDescending { it.dateObtained } else list.sortedBy { it.dateObtained }
+        }
     }
 
     fun insert(achievement: Achievement) = viewModelScope.launch {
@@ -79,5 +90,21 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
     
     suspend fun getAchievementById(id: Int): Achievement? {
         return repository.getAchievementById(id)
+    }
+
+    // Preference Methods
+    fun setTeamTheme(theme: String) = viewModelScope.launch {
+        preferenceManager.saveTeamTheme(theme)
+        updateClassColors(theme)
+    }
+
+    fun setSortOrder(recentFirst: Boolean) = viewModelScope.launch {
+        preferenceManager.saveSortOrder(recentFirst)
+    }
+
+    private suspend fun updateClassColors(theme: String) {
+        val color = if (theme == "RED") "#BD3B3B" else "#5885A2"
+        val classes = allClasses.value.map { it.copy(teamColor = color) }
+        repository.insertClasses(classes)
     }
 }

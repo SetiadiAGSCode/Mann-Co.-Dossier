@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -24,21 +26,34 @@ import com.setiadi0053.mobpro_asses2.ui.theme.MobProAsses2Theme
 @Composable
 fun ClassSelectionScreen(
     viewModel: AchievementViewModel,
-    onClassClick: (Int) -> Unit
+    onClassClick: (Int) -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val classes by viewModel.allClasses.collectAsState()
-    ClassSelectionContent(classes = classes, onClassClick = onClassClick)
+    ClassSelectionContent(
+        classes = classes,
+        onClassClick = onClassClick,
+        onSettingsClick = onSettingsClick
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassSelectionContent(
     classes: List<Tf2Class>,
-    onClassClick: (Int) -> Unit
+    onClassClick: (Int) -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Select TF2 Class") })
+            TopAppBar(
+                title = { Text("TF2 Achievements") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                }
+            )
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
@@ -64,8 +79,9 @@ fun ClassSelectionContent(
 
 @Composable
 fun ClassCard(tf2Class: Tf2Class, onClick: () -> Unit) {
+    val colorString = tf2Class.teamColor
     val color = try {
-        Color(android.graphics.Color.parseColor(tf2Class.teamColor))
+        Color(android.graphics.Color.parseColor(colorString))
     } catch (e: Exception) {
         MaterialTheme.colorScheme.primaryContainer
     }
@@ -114,16 +130,10 @@ fun ClassSelectionPreview() {
         ClassSelectionContent(
             classes = listOf(
                 Tf2Class(1, "Scout", "#BD3B3B"),
-                Tf2Class(2, "Soldier", "#BD3B3B"),
-                Tf2Class(3, "Pyro", "#BD3B3B"),
-                Tf2Class(4, "Demoman", "#BD3B3B"),
-                Tf2Class(5, "Heavy", "#BD3B3B"),
-                Tf2Class(6, "Engineer", "#BD3B3B"),
-                Tf2Class(7, "Medic", "#BD3B3B"),
-                Tf2Class(8, "Sniper", "#BD3B3B"),
-                Tf2Class(9, "Spy", "#BD3B3B")
+                Tf2Class(2, "Soldier", "#BD3B3B")
             ),
-            onClassClick = {}
+            onClassClick = {},
+            onSettingsClick = {}
         )
     }
 }

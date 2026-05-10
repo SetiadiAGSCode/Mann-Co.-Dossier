@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,9 +21,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MobProAsses2Theme {
+            val viewModel: AchievementViewModel = viewModel()
+            val teamTheme by viewModel.teamTheme.collectAsState()
+
+            MobProAsses2Theme(teamTheme = teamTheme) {
                 val navController = rememberNavController()
-                val viewModel: AchievementViewModel = viewModel()
 
                 NavHost(navController = navController, startDestination = "class_selection") {
                     composable("class_selection") {
@@ -29,6 +33,9 @@ class MainActivity : ComponentActivity() {
                             viewModel = viewModel,
                             onClassClick = { classId ->
                                 navController.navigate("list/$classId")
+                            },
+                            onSettingsClick = {
+                                navController.navigate("settings")
                             }
                         )
                     }
@@ -70,6 +77,12 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("recycle_bin") {
                         RecycleBinScreen(
+                            viewModel = viewModel,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("settings") {
+                        SettingsScreen(
                             viewModel = viewModel,
                             onNavigateBack = { navController.popBackStack() }
                         )

@@ -41,25 +41,27 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
         )
 
-        seedClasses()
+        viewModelScope.launch {
+            // Wait for first collect to ensure we don't double-seed
+            allClasses.filter { it.isNotEmpty() }.firstOrNull() ?: seedClasses()
+        }
     }
 
-    private fun seedClasses() {
-        viewModelScope.launch {
-            // Using a flow check or similar would be better, but for this assessment:
-            val classes = listOf(
-                Tf2Class(1, "Scout", "#BD3B3B"),
-                Tf2Class(2, "Soldier", "#BD3B3B"),
-                Tf2Class(3, "Pyro", "#BD3B3B"),
-                Tf2Class(4, "Demoman", "#BD3B3B"),
-                Tf2Class(5, "Heavy", "#BD3B3B"),
-                Tf2Class(6, "Engineer", "#BD3B3B"),
-                Tf2Class(7, "Medic", "#BD3B3B"),
-                Tf2Class(8, "Sniper", "#BD3B3B"),
-                Tf2Class(9, "Spy", "#BD3B3B")
-            )
-            repository.insertClasses(classes)
-        }
+    private suspend fun seedClasses() {
+        val theme = teamTheme.value
+        val color = if (theme == "RED") "#BD3B3B" else "#5885A2"
+        val classes = listOf(
+            Tf2Class(1, "Scout", color),
+            Tf2Class(2, "Soldier", color),
+            Tf2Class(3, "Pyro", color),
+            Tf2Class(4, "Demoman", color),
+            Tf2Class(5, "Heavy", color),
+            Tf2Class(6, "Engineer", color),
+            Tf2Class(7, "Medic", color),
+            Tf2Class(8, "Sniper", color),
+            Tf2Class(9, "Spy", color)
+        )
+        repository.insertClasses(classes)
     }
 
     fun getAchievementsByClass(classId: Int): Flow<List<Achievement>> {
@@ -104,7 +106,10 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
 
     private suspend fun updateClassColors(theme: String) {
         val color = if (theme == "RED") "#BD3B3B" else "#5885A2"
-        val classes = allClasses.value.map { it.copy(teamColor = color) }
-        repository.insertClasses(classes)
+        val currentClasses = allClasses.value
+        if (currentClasses.isNotEmpty()) {
+            val updatedClasses = currentClasses.map { it.copy(teamColor = color) }
+            repository.insertClasses(updatedClasses)
+        }
     }
 }

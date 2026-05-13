@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +31,8 @@ fun RecycleBinScreen(
         deletedAchievements = deletedAchievements,
         onNavigateBack = onNavigateBack,
         onRestore = { viewModel.restore(it) },
-        onDeleteForever = { viewModel.deletePermanently(it) }
+        onDeleteForever = { viewModel.deletePermanently(it) },
+        onEmptyBin = { viewModel.emptyRecycleBin() }
     )
 }
 
@@ -40,9 +42,11 @@ fun RecycleBinContent(
     deletedAchievements: List<Achievement>,
     onNavigateBack: () -> Unit,
     onRestore: (Achievement) -> Unit,
-    onDeleteForever: (Achievement) -> Unit
+    onDeleteForever: (Achievement) -> Unit,
+    onEmptyBin: () -> Unit
 ) {
     var showDeleteForeverDialog by remember { mutableStateOf<Achievement?>(null) }
+    var showEmptyBinDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -51,6 +55,13 @@ fun RecycleBinContent(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (deletedAchievements.isNotEmpty()) {
+                        IconButton(onClick = { showEmptyBinDialog = true }) {
+                            Icon(Icons.Default.DeleteSweep, contentDescription = "Empty Bin")
+                        }
                     }
                 }
             )
@@ -92,6 +103,27 @@ fun RecycleBinContent(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteForeverDialog = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showEmptyBinDialog) {
+        AlertDialog(
+            onDismissRequest = { showEmptyBinDialog = false },
+            title = { Text("Empty Recycle Bin?") },
+            text = { Text("All items in the Recycle Bin will be permanently deleted. This action is irreversible.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onEmptyBin()
+                    showEmptyBinDialog = false
+                }) {
+                    Text("Empty Bin", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEmptyBinDialog = false }) {
                     Text("Cancel")
                 }
             }
@@ -140,7 +172,8 @@ fun RecycleBinPreview() {
             ),
             onNavigateBack = {},
             onRestore = {},
-            onDeleteForever = {}
+            onDeleteForever = {},
+            onEmptyBin = {}
         )
     }
 }

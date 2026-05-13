@@ -30,8 +30,11 @@ fun ClassSelectionScreen(
     onSettingsClick: () -> Unit
 ) {
     val classes by viewModel.allClasses.collectAsState()
+    val counts by viewModel.achievementCounts.collectAsState()
+    
     ClassSelectionContent(
         classes = classes,
+        counts = counts,
         onClassClick = onClassClick,
         onSettingsClick = onSettingsClick
     )
@@ -41,6 +44,7 @@ fun ClassSelectionScreen(
 @Composable
 fun ClassSelectionContent(
     classes: List<Tf2Class>,
+    counts: Map<Int, Int>,
     onClassClick: (Int) -> Unit,
     onSettingsClick: () -> Unit
 ) {
@@ -70,7 +74,12 @@ fun ClassSelectionContent(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(classes) { tf2Class ->
-                    ClassCard(tf2Class = tf2Class, onClick = { onClassClick(tf2Class.id) })
+                    val count = counts[tf2Class.id] ?: 0
+                    ClassCard(
+                        tf2Class = tf2Class,
+                        achievementCount = count,
+                        onClick = { onClassClick(tf2Class.id) }
+                    )
                 }
             }
         }
@@ -78,7 +87,7 @@ fun ClassSelectionContent(
 }
 
 @Composable
-fun ClassCard(tf2Class: Tf2Class, onClick: () -> Unit) {
+fun ClassCard(tf2Class: Tf2Class, achievementCount: Int, onClick: () -> Unit) {
     val colorString = tf2Class.teamColor
     val color = try {
         Color(android.graphics.Color.parseColor(colorString))
@@ -89,7 +98,7 @@ fun ClassCard(tf2Class: Tf2Class, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(130.dp)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -118,6 +127,11 @@ fun ClassCard(tf2Class: Tf2Class, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Text(
+                    text = "$achievementCount Logged",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -132,6 +146,7 @@ fun ClassSelectionPreview() {
                 Tf2Class(1, "Scout", "#BD3B3B"),
                 Tf2Class(2, "Soldier", "#BD3B3B")
             ),
+            counts = mapOf(1 to 5, 2 to 0),
             onClassClick = {},
             onSettingsClick = {}
         )

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import com.setiadi0053.mobpro_asses2.data.entity.Achievement
 import com.setiadi0053.mobpro_asses2.data.entity.Tf2Class
 import com.setiadi0053.mobpro_asses2.ui.AchievementViewModel
@@ -88,37 +89,45 @@ fun AchievementListContent(
     onMoveToRecycleBin: (Achievement) -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
-    var showDeleteDialog by remember { mutableStateOf<Achievement?>(null) }
-    var isSearchActive by remember { mutableStateOf(false) }
+    val showDeleteDialog = remember { mutableStateOf<Achievement?>(null) }
+    val isSearchActive = remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            if (isSearchActive) {
+            if (isSearchActive.value) {
                 SearchBar(
-                    query = searchQuery,
-                    onQueryChange = onSearchQueryChange,
-                    onSearch = { isSearchActive = false },
-                    active = true,
-                    onActiveChange = { isSearchActive = it },
-                    placeholder = { Text("Search achievements...") },
-                    leadingIcon = {
-                        IconButton(onClick = { 
-                            isSearchActive = false
-                            onSearchQueryChange("")
-                        }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { onSearchQueryChange("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            query = searchQuery,
+                            onQueryChange = onSearchQueryChange,
+                            onSearch = { isSearchActive.value = false },
+                            expanded = true,
+                            onExpandedChange = { isSearchActive.value = it },
+                            placeholder = { Text("Search achievements...") },
+                            leadingIcon = {
+                                IconButton(onClick = { 
+                                    isSearchActive.value = false
+                                    onSearchQueryChange("")
+                                }) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                }
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { onSearchQueryChange("") }) {
+                                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                    }
+                                }
                             }
-                        }
+                        )
                     },
+                    expanded = true,
+                    onExpandedChange = { isSearchActive.value = it },
                     modifier = Modifier.fillMaxWidth()
-                ) {}
+                ) {
+                    // Results would be shown here
+                }
             } else {
                 TopAppBar(
                     title = { Text("${tf2Class?.name ?: "Class"} Achievements") },
@@ -135,7 +144,7 @@ fun AchievementListContent(
                                 tint = if (showOnlyFavorites) MaterialTheme.colorScheme.primary else LocalContentColor.current
                             )
                         }
-                        IconButton(onClick = { isSearchActive = true }) {
+                        IconButton(onClick = { isSearchActive.value = true }) {
                             Icon(Icons.Default.Search, contentDescription = "Search")
                         }
                         IconButton(onClick = onRecycleBinClick) {
@@ -175,7 +184,7 @@ fun AchievementListContent(
                             achievement = achievement,
                             tf2Class = tf2Class,
                             onEdit = { onEditClick(achievement.id) },
-                            onDelete = { showDeleteDialog = achievement },
+                            onDelete = { showDeleteDialog.value = achievement },
                             onToggleFavorite = { onToggleFavorite(achievement) }
                         )
                     }
@@ -184,21 +193,21 @@ fun AchievementListContent(
         }
     }
 
-    if (showDeleteDialog != null) {
+    if (showDeleteDialog.value != null) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = null },
+            onDismissRequest = { showDeleteDialog.value = null },
             title = { Text("Move to Recycle Bin?") },
             text = { Text("You can restore it later from the Recycle Bin.") },
             confirmButton = {
                 TextButton(onClick = {
-                    showDeleteDialog?.let { onMoveToRecycleBin(it) }
-                    showDeleteDialog = null
+                    showDeleteDialog.value?.let { onMoveToRecycleBin(it) }
+                    showDeleteDialog.value = null
                 }) {
                     Text("Move", color = Color.Red)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) {
+                TextButton(onClick = { showDeleteDialog.value = null }) {
                     Text("Cancel")
                 }
             }
@@ -216,7 +225,11 @@ fun AchievementItem(
 ) {
     val colorString = tf2Class?.teamColor ?: "#CCCCCC"
     val color = remember(colorString) {
-        try { Color(android.graphics.Color.parseColor(colorString)) } catch (e: Exception) { Color.Gray }
+        try {
+            Color(colorString.toColorInt())
+        } catch (_: Exception) {
+            Color.Gray
+        }
     }
     
     Card(

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import com.setiadi0053.mobpro_asses2.data.entity.Tf2Class
 import com.setiadi0053.mobpro_asses2.ui.AchievementViewModel
 import com.setiadi0053.mobpro_asses2.ui.theme.MobProAsses2Theme
@@ -88,10 +89,9 @@ fun ClassSelectionContent(
 
 @Composable
 fun ClassCard(tf2Class: Tf2Class, achievementCount: Int, onClick: () -> Unit) {
-    val colorString = tf2Class.teamColor
     val color = try {
-        Color(android.graphics.Color.parseColor(colorString))
-    } catch (e: Exception) {
+        Color(tf2Class.teamColor.toColorInt())
+    } catch (_: Exception) {
         MaterialTheme.colorScheme.primaryContainer
     }
 

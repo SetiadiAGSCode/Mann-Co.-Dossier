@@ -27,51 +27,51 @@ fun AchievementFormScreen(
 ) {
     val classes by viewModel.allClasses.collectAsState()
     
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var selectedClassId by remember { mutableIntStateOf(initialClassId ?: 1) }
-    var notes by remember { mutableStateOf("") }
-    var dateObtained by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var isEditMode by remember { mutableStateOf(false) }
+    val nameState = remember { mutableStateOf("") }
+    val descriptionState = remember { mutableStateOf("") }
+    val selectedClassIdState = remember { mutableIntStateOf(initialClassId ?: 1) }
+    val notesState = remember { mutableStateOf("") }
+    val dateObtainedState = remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val isEditModeState = remember { mutableStateOf(false) }
 
     LaunchedEffect(achievementId) {
         if (achievementId != null && achievementId != -1) {
             val achievement = viewModel.getAchievementById(achievementId)
             achievement?.let {
-                name = it.name
-                description = it.description
-                selectedClassId = it.classId
-                notes = it.notes
-                dateObtained = it.dateObtained
-                isEditMode = true
+                nameState.value = it.name
+                descriptionState.value = it.description
+                selectedClassIdState.intValue = it.classId
+                notesState.value = it.notes
+                dateObtainedState.longValue = it.dateObtained
+                isEditModeState.value = true
             }
         }
     }
 
     AchievementFormContent(
         classes = classes,
-        name = name,
-        onNameChange = { name = it },
-        description = description,
-        onDescriptionChange = { description = it },
-        selectedClassId = selectedClassId,
-        onClassSelected = { selectedClassId = it },
-        notes = notes,
-        onNotesChange = { notes = it },
-        dateObtained = dateObtained,
-        onDateChange = { dateObtained = it },
-        isEditMode = isEditMode,
+        name = nameState.value,
+        onNameChange = { nameState.value = it },
+        description = descriptionState.value,
+        onDescriptionChange = { descriptionState.value = it },
+        selectedClassId = selectedClassIdState.intValue,
+        onClassSelected = { selectedClassIdState.intValue = it },
+        notes = notesState.value,
+        onNotesChange = { notesState.value = it },
+        dateObtained = dateObtainedState.longValue,
+        onDateChange = { dateObtainedState.longValue = it },
+        isEditMode = isEditModeState.value,
         onNavigateBack = onNavigateBack,
         onSave = {
             val achievement = Achievement(
-                id = if (isEditMode) achievementId!! else 0,
-                classId = selectedClassId,
-                name = name,
-                description = description,
-                dateObtained = dateObtained,
-                notes = notes
+                id = if (isEditModeState.value) achievementId!! else 0,
+                classId = selectedClassIdState.intValue,
+                name = nameState.value,
+                description = descriptionState.value,
+                dateObtained = dateObtainedState.longValue,
+                notes = notesState.value
             )
-            if (isEditMode) viewModel.update(achievement) else viewModel.insert(achievement)
+            if (isEditModeState.value) viewModel.update(achievement) else viewModel.insert(achievement)
             onNavigateBack()
         }
     )
@@ -95,9 +95,9 @@ fun AchievementFormContent(
     onNavigateBack: () -> Unit,
     onSave: () -> Unit
 ) {
-    var isError by remember { mutableStateOf(false) }
+    val isErrorState = remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateObtained)
-    var showDatePicker by remember { mutableStateOf(false) }
+    val showDatePickerState = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -121,46 +121,52 @@ fun AchievementFormContent(
         ) {
             OutlinedTextField(
                 value = name,
-                onValueChange = { onNameChange(it); isError = false },
+                onValueChange = { 
+                    onNameChange(it)
+                    isErrorState.value = false 
+                },
                 label = { Text("Achievement Name (Required)") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = isError && name.isBlank()
+                isError = isErrorState.value && name.isBlank()
             )
 
             OutlinedTextField(
                 value = description,
-                onValueChange = { onDescriptionChange(it); isError = false },
+                onValueChange = { 
+                    onDescriptionChange(it)
+                    isErrorState.value = false 
+                },
                 label = { Text("Description (Required)") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = isError && description.isBlank()
+                isError = isErrorState.value && description.isBlank()
             )
 
             Text("Select Class:", style = MaterialTheme.typography.labelLarge)
-            var expanded by remember { mutableStateOf(false) }
+            val expandedState = remember { mutableStateOf(false) }
             val selectedClassName = classes.find { it.id == selectedClassId }?.name ?: "Select Class"
 
             ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+                expanded = expandedState.value,
+                onExpandedChange = { expandedState.value = it }
             ) {
                 OutlinedTextField(
                     value = selectedClassName,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Class") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedState.value) },
                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
                 )
                 ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    expanded = expandedState.value,
+                    onDismissRequest = { expandedState.value = false }
                 ) {
                     classes.forEach { tf2Class ->
                         DropdownMenuItem(
                             text = { Text(tf2Class.name) },
                             onClick = {
                                 onClassSelected(tf2Class.id)
-                                expanded = false
+                                expandedState.value = false
                             }
                         )
                     }
@@ -173,7 +179,7 @@ fun AchievementFormContent(
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Date Obtained") },
-                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+                modifier = Modifier.fillMaxWidth().clickable { showDatePickerState.value = true },
                 enabled = false,
                 colors = OutlinedTextFieldDefaults.colors(
                     disabledTextColor = MaterialTheme.colorScheme.onSurface,
@@ -181,7 +187,7 @@ fun AchievementFormContent(
                     disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
-            Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { showDatePickerState.value = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Change Date")
             }
 
@@ -193,7 +199,7 @@ fun AchievementFormContent(
                 minLines = 3
             )
 
-            if (isError) {
+            if (isErrorState.value) {
                 Text(
                     text = "Please fill in the Name and Description.",
                     color = MaterialTheme.colorScheme.error,
@@ -204,7 +210,7 @@ fun AchievementFormContent(
             Button(
                 onClick = {
                     if (name.isBlank() || description.isBlank()) {
-                        isError = true
+                        isErrorState.value = true
                     } else {
                         onSave()
                     }
@@ -216,17 +222,17 @@ fun AchievementFormContent(
         }
     }
 
-    if (showDatePicker) {
+    if (showDatePickerState.value) {
         DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
+            onDismissRequest = { showDatePickerState.value = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { onDateChange(it) }
-                    showDatePicker = false
+                    showDatePickerState.value = false
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePickerState.value = false }) { Text("Cancel") }
             }
         ) { DatePicker(state = datePickerState) }
     }
@@ -239,15 +245,15 @@ fun AchievementFormPreview() {
         AchievementFormContent(
             classes = listOf(Tf2Class(1, "Scout", "#BD3B3B")),
             name = "",
-            onNameChange = {},
+            onNameChange = { _ -> },
             description = "",
-            onDescriptionChange = {},
+            onDescriptionChange = { _ -> },
             selectedClassId = 1,
-            onClassSelected = {},
+            onClassSelected = { _ -> },
             notes = "",
-            onNotesChange = {},
+            onNotesChange = { _ -> },
             dateObtained = System.currentTimeMillis(),
-            onDateChange = {},
+            onDateChange = { _ -> },
             isEditMode = false,
             onNavigateBack = {},
             onSave = {}

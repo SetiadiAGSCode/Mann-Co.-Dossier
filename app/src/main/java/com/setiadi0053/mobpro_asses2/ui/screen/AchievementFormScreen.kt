@@ -123,7 +123,7 @@ fun AchievementFormContent(
                 value = name,
                 onValueChange = { 
                     onNameChange(it)
-                    isErrorState.value = false 
+                    isErrorState.value = false
                 },
                 label = { Text("Achievement Name (Required)") },
                 modifier = Modifier.fillMaxWidth(),
@@ -134,7 +134,7 @@ fun AchievementFormContent(
                 value = description,
                 onValueChange = { 
                     onDescriptionChange(it)
-                    isErrorState.value = false 
+                    isErrorState.value = false
                 },
                 label = { Text("Description (Required)") },
                 modifier = Modifier.fillMaxWidth(),

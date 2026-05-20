@@ -90,7 +90,7 @@ fun RecycleBinContent(
 
     if (showDeleteForeverDialog != null) {
         AlertDialog(
-            onDismissRequest = { showDeleteForeverDialog = null },
+            onDismissRequest = { },
             title = { Text("Delete Permanently?") },
             text = { Text("This action cannot be undone. The achievement log will be gone forever.") },
             confirmButton = {
@@ -102,7 +102,7 @@ fun RecycleBinContent(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteForeverDialog = null }) {
+                TextButton(onClick = { }) {
                     Text("Cancel")
                 }
             }
@@ -111,19 +111,18 @@ fun RecycleBinContent(
 
     if (showEmptyBinDialog) {
         AlertDialog(
-            onDismissRequest = { showEmptyBinDialog = false },
+            onDismissRequest = { },
             title = { Text("Empty Recycle Bin?") },
             text = { Text("All items in the Recycle Bin will be permanently deleted. This action is irreversible.") },
             confirmButton = {
                 TextButton(onClick = {
                     onEmptyBin()
-                    showEmptyBinDialog = false
                 }) {
                     Text("Empty Bin", color = Color.Red)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showEmptyBinDialog = false }) {
+                TextButton(onClick = { }) {
                     Text("Cancel")
                 }
             }
